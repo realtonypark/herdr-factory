@@ -1,0 +1,46 @@
+RECIPE.md
+  h_05e5164a29872e 1-76
+keys.json
+  h_05e5164a29872e 1-19
+layouts/factory.json
+  h_05e5164a29872e 1-202
+layouts/factory.svg
+  h_05e5164a29872e 1-72
+mods/factory-home/arrow-up.svg
+  h_05e5164a29872e 1-4
+mods/factory-home/autonomy.svg
+  h_05e5164a29872e 1-5
+mods/factory-home/halftone.py
+  h_05e5164a29872e 1-103
+mods/factory-home/main.js
+  h_05e5164a29872e 1-258
+mods/factory-home/mod.json
+  h_05e5164a29872e 1-4
+mods/factory-more/main.js
+  h_05e5164a29872e 1-62
+mods/factory-more/mod.json
+  h_05e5164a29872e 1-5
+mods/factory-sidebar/filter.svg
+  h_05e5164a29872e 1-5
+mods/factory-sidebar/house.svg
+  h_05e5164a29872e 1-5
+mods/factory-sidebar/main.js
+  h_05e5164a29872e 1-574
+mods/factory-sidebar/mod.json
+  h_05e5164a29872e 1-4
+mods/factory-status/main.js
+  h_05e5164a29872e 1-98
+mods/factory-status/mod.json
+  h_05e5164a29872e 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6afc6e34f07b95f7c56304c811427c6cbc65aabf",
+  "prompts": {},
+  "humans": {
+    "h_05e5164a29872e": {
+      "author": "realtonypark <realtonypark@gmail.com>"
+    }
+  }
+}
