@@ -1,0 +1,19 @@
+{
+  "layout:factory": {
+    "cmd-shift-h": {
+      "command": "layout.select",
+      "args": {
+        "stack": "main-stack",
+        "child": "home"
+      }
+    },
+    "cmd-shift-j": {
+      "command": "layout.select",
+      "args": {
+        "stack": "main-stack",
+        "child": "work"
+      }
+    },
+    "cmd-b": "factory-sidebar.toggle"
+  }
+}

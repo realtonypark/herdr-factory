@@ -1,0 +1,202 @@
+{
+  "id": "root",
+  "type": "row",
+  "titlebar": "none",
+  "traffic_lights": [
+    16,
+    18
+  ],
+  "theme": "factory",
+  "background": "canvas",
+  "terminal_padding": [
+    16,
+    20
+  ],
+  "divider": {
+    "width": 1,
+    "color": "canvas"
+  },
+  "children": [
+    {
+      "id": "sidebar",
+      "type": "column",
+      "size": {
+        "px": 268
+      },
+      "min": 44,
+      "max": 460,
+      "background": "chrome",
+      "children": [
+        {
+          "id": "sidebar-head",
+          "type": "block",
+          "size": {
+            "px": 46
+          },
+          "window_drag": true,
+          "content": {
+            "mod": "factory-sidebar",
+            "props": {
+              "part": "head"
+            }
+          }
+        },
+        {
+          "id": "sidebar-nav",
+          "type": "block",
+          "size": {
+            "px": 156
+          },
+          "content": {
+            "mod": "factory-sidebar",
+            "props": {
+              "part": "nav"
+            }
+          }
+        },
+        {
+          "id": "sidebar-lists",
+          "type": "block",
+          "size": {
+            "weight": 1
+          },
+          "min": 120,
+          "content": {
+            "mod": "factory-sidebar",
+            "props": {
+              "part": "list"
+            }
+          }
+        },
+        {
+          "id": "sidebar-footer",
+          "type": "block",
+          "size": {
+            "px": 52
+          },
+          "content": {
+            "mod": "factory-sidebar",
+            "props": {
+              "part": "foot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "type": "column",
+      "children": [
+        {
+          "id": "work-body",
+          "type": "row",
+          "gap": 0,
+          "children": [
+            {
+              "id": "main-stack",
+              "type": "stack",
+              "active": "work",
+              "children": [
+                {
+                  "id": "work",
+                  "type": "block",
+                  "padding": 10,
+                  "content": {
+                    "tab": "active",
+                    "pane": {
+                      "gap": 8,
+                      "radius": 10,
+                      "background": "background",
+                      "lone": true,
+                      "border": {
+                        "width": 1,
+                        "color": "border"
+                      },
+                      "focus": {
+                        "width": 1,
+                        "color": "input"
+                      },
+                      "header": {
+                        "content": {
+                          "mod": "pane"
+                        },
+                        "height": 30,
+                        "position": "top",
+                        "reveal": "hover"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "home",
+                  "type": "block",
+                  "content": {
+                    "mod": "factory-home"
+                  },
+                  "background": {
+                    "image": "mods/factory-home/halftone.png",
+                    "fit": "cover"
+                  }
+                }
+              ],
+              "size": {
+                "weight": 1
+              },
+              "min": 0
+            },
+            {
+              "id": "panel",
+              "type": "column",
+              "hidden": true,
+              "size": {
+                "px": 368
+              },
+              "min": 280,
+              "max": 900,
+              "children": [
+                {
+                  "id": "panel-body",
+                  "type": "stack",
+                  "active": "files",
+                  "children": [
+                    {
+                      "id": "files",
+                      "type": "block",
+                      "content": {
+                        "mod": "files"
+                      }
+                    },
+                    {
+                      "id": "changes",
+                      "type": "block",
+                      "content": {
+                        "mod": "changes"
+                      }
+                    }
+                  ],
+                  "size": {
+                    "weight": 1
+                  },
+                  "min": 0
+                }
+              ],
+              "padding": 10,
+              "background": "canvas"
+            }
+          ]
+        },
+        {
+          "id": "status",
+          "type": "block",
+          "size": {
+            "px": 26
+          },
+          "content": {
+            "mod": "factory-status"
+          }
+        }
+      ]
+    }
+  ],
+  "preview": "layouts/factory.svg"
+}
