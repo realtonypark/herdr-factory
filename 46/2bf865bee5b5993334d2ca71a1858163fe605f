@@ -1,0 +1,22 @@
+RECIPE.md
+  h_05e5164a29872e 20,36-39,55-58,74
+mods/factory-agents/main.js
+  h_05e5164a29872e 1-93
+mods/factory-agents/mod.json
+  h_05e5164a29872e 1-5
+mods/factory-machines/main.js
+  h_05e5164a29872e 1-81
+mods/factory-machines/mod.json
+  h_05e5164a29872e 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "462bf865bee5b5993334d2ca71a1858163fe605f",
+  "prompts": {},
+  "humans": {
+    "h_05e5164a29872e": {
+      "author": "realtonypark <realtonypark@gmail.com>"
+    }
+  }
+}
