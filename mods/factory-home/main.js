@@ -4,7 +4,7 @@
 
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, TextareaState, Textarea } from "gpui-base";
-import { run, theme, spaces, knownAgents, pickFolder, layout, openOverlay } from "herdr";
+import { run, theme, spaces, knownAgents, pickFolder, layout, openOverlay, shared, setShared } from "herdr";
 
 const I = (name) => `mods/workspace-chrome/${name}.svg`;
 
@@ -29,7 +29,6 @@ export default class FactoryHome extends View {
   init(_props, cx) {
     this.text = "";
     this.agents = [];
-    this.agentIndex = 0;
     this.folder = null;
     this.shown = false;
     this.input = TextareaState.new({ placeholder: "Describe a task or ask a question", rows: 2 });
@@ -56,16 +55,27 @@ export default class FactoryHome extends View {
   }
 
   agent() {
-    return this.agents[this.agentIndex] ?? null;
+    const chosen = shared("factory.agent");
+    const list = this.agents;
+    const pick = chosen ? list.find((a) => a.name === chosen) : null;
+    return pick ?? list[0] ?? null;
+  }
+
+  // "" is this computer, a name is another machine, null follows the space.
+  target() {
+    const chosen = shared("factory.machine");
+    if (chosen === null || chosen === undefined) return spaces().find((s) => s.active)?.machine ?? "";
+    return chosen;
   }
 
   submit(cx) {
     const text = (this.input.value() ?? "").trim();
     const space = spaces().find((s) => s.active);
     const agent = this.agent();
-    const folder = this.folder ?? space?.folder ?? null;
+    const target = this.target();
+    // A folder picked here only means something on this computer.
+    const folder = target ? null : this.folder ?? space?.folder ?? null;
     const args = {};
-    if (space) args.space = space.id;
     if (folder) args.folder = folder;
     if (agent?.run) {
       args.argv = agent.run;
@@ -74,7 +84,14 @@ export default class FactoryHome extends View {
     } else if (text) {
       args.name = shortName(text);
     }
-    run("tab.new", args);
+    if (target && target !== (space?.machine ?? "")) {
+      // Another machine: the space lives there, with its first tab already running.
+      args.machine = target;
+      run("space.new", args);
+    } else {
+      if (space) args.space = space.id;
+      run("tab.new", args);
+    }
     run("layout.select", { stack: "main-stack", child: "work" });
     this.input.set_value("");
     this.text = "";
@@ -109,14 +126,11 @@ export default class FactoryHome extends View {
       .cursor_pointer()
       .hover((s) => s.bg(t.hover).text_color(t.foreground))
       .tooltip("Click to pick the agent")
-      .on_click((_e, cx) => {
-        if (!this.agents.length) return;
-        this.agentIndex = (this.agentIndex + 1) % this.agents.length;
-        cx.notify();
-      })
+      .on_click(() => openOverlay({ mod: "factory-agents", kind: "popup", width: 232, height: 300 }))
       .child(icon)
       .child(div().child(agent?.name ?? "Shell"))
       .child(svg(I("chevron-down")).size(11).flex_none().text_color(t.dim));
+    const target = this.target();
     const folderName = this.folder ? this.folder.replace(/\/+$/, "").split("/").pop() : (spaces().find((s) => s.active)?.name ?? "~");
     const chip = h_flex()
       .id("factory-folder")
@@ -207,6 +221,7 @@ export default class FactoryHome extends View {
       this.shown = false;
     }
     const space = spaces().find((s) => s.active);
+    const target = this.target();
     return v_flex()
       .size_full()
       .relative()
@@ -236,9 +251,13 @@ export default class FactoryHome extends View {
           .font_family("Geist Mono")
           .text_size(10.5)
           .text_color(t.foreground)
-          .tooltip(space?.machine ? `Sessions start on ${space.machine}` : "Sessions start on this computer")
-          .child(svg(I(space?.machine ? "server" : "monitor")).size(12).flex_none().text_color(t.dim))
-          .child(div().child(space?.machine ?? "Local")))
+          .tooltip(target ? `Sessions start on ${target}: click to change` : "Sessions start on this computer: click to change")
+          .cursor_pointer()
+          .hover((s) => s.bg(t.hover).text_color(t.foreground))
+          .on_click(() => openOverlay({ mod: "factory-machines", kind: "popup", width: 232, height: 220 }))
+          .child(svg(I(target ? "server" : "monitor")).size(12).flex_none().text_color(t.dim))
+          .child(div().child(target || "Local"))
+          .child(svg(I("chevron-down")).size(10).flex_none().text_color(t.dim)))
         .child(h_flex()
           .h(24)
           .px(8)
