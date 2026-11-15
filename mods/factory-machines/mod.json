@@ -1,0 +1,5 @@
+{
+  "place": "none",
+  "title": "Where a session starts",
+  "overlay": { "kind": "popup", "width": 232, "height": 260 }
+}

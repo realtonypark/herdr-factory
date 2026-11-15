@@ -1,0 +1,5 @@
+{
+  "place": "none",
+  "title": "Which agent starts the session",
+  "overlay": { "kind": "popup", "width": 232, "height": 300 }
+}

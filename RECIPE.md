@@ -17,7 +17,7 @@ The sidebar is 268px of near-black `#0a0a0a`, four blocks of the same mod:
 
 The work area is a stack of two blocks:
 
-- **Home**: the dusk. A 2400×1400 halftone — a 12px grid of round dots whose size and colour follow a light field, so a plume of `#ff8a38` and pale orange rises from the bottom-right over `#070605`, with a fine dot texture across the rest. Above it, “What should we work on?” at 34px regular, then a composer card (680px wide, radius 10, `#0d0d0d`, hairline `#1f1f1f`, mono placeholder): a `+`, the agent pill with the agent's icon and name, the folder chip and a round `#ee6018` send button. Under the card, two mono chips: the machine and the workstream.
+- **Home**: the dusk. A 2400×1400 halftone — a 12px grid of round dots whose size and colour follow a light field, so a plume of `#ff8a38` and pale orange rises from the bottom-right over `#070605`, with a fine dot texture across the rest. Above it, “What should we work on?” at 34px regular, then a composer card (680px wide, radius 10, `#0d0d0d`, hairline `#1f1f1f`, mono placeholder): a `+`, the agent pill (the chosen agent's icon, name and a chevron), the folder chip and a round `#ee6018` send button. Under the card, two mono chips with chevrons: the machine the session will start on, and the workstream.
 - **Work**: the shown tab's terminals as cards — 10px inset, 8px gap, radius 10, `#0e0e0e` on `#050505`, a 1px `#1f1f1f` border, and a 30px pane header that appears on hover (the shipped `pane` mod: icon, name, folder, status, split/zoom/close).
 
 The right panel (Files or Changes, 368px, inset 10px) is a card of the same family and starts hidden.
@@ -33,7 +33,10 @@ Theme `factory` (dark only): canvas `#050505`, chrome `#0a0a0a`, cards and termi
 - **Group folds.** The whole header row toggles its group, and the fold is remembered per install. The filter icon limits sessions to the active workstream. `+` opens Herdr's new-session menu.
 - **Workstreams.** Click selects and shows work. Drag reorders (`space.move`) with an accent line showing the landing spot. Right-click opens Herdr's space menu, so worktrees and rename are there. Colour chips come from the shared `space.colors` map, so other Herdr views agree. A space whose machine is not answering gets a red dot.
 - **The sidebar folds to a rail.** `⌘B`, the head button or More > Collapse sidebar resize the column to 76px (44px off macOS): the window buttons own the top row, then Home, New, Agents, Search, More, workstream initials with a status dot, and `»` with the gear at the bottom. `⌘B` again, or `»`, brings the full width back. It never hides, so the window buttons always have their corner.
-- **The composer.** Enter in the box (or the send button) runs `tab.new` in the active space: the chosen agent as `argv`, the text as `task`, and the first six words as the tab name. The agent pill cycles the installed agents (from `knownAgents`, plus Shell); the folder chip opens the system folder picker (this computer only — it is disabled with a reason for a space on another machine).
+- **The composer.** Enter in the box (or the send button) starts a session: the chosen agent as `argv`, the text as `task`, and the first six words as the tab name.
+- **The agent pill** opens a list: the installed agents from `knownAgents` (checked one marked), then a plain Shell, then “More to start…” for Herdr's own new-session menu. The choice is remembered in shared state (`factory.agent`).
+- **The machine chip** opens where the next session starts: *Follow this workstream* (the active space's machine, the default), *This computer*, each machine from `machines()`, and *Add machine…*. Choosing another machine runs `space.new` on it with the first tab already running the agent; choosing the space's own machine just adds a tab there. The choice is remembered (`factory.machine`).
+- **The folder chip** opens the system folder picker. It only sees this computer, so it is disabled with a reason when the target is another machine.
 - **The status line.** The agent count opens the agents dialog (statuses, pins, sub-agents, sort). Files and Changes swap the right panel and close it when pressed again. The palette hint shows the key actually bound to `app.palette`.
 - **Keys added for this layout** (`layout:factory`): `⌘⇧H` home, `⌘⇧J` back to work, `⌘B` sidebar rail.
 
@@ -48,6 +51,10 @@ Theme `factory` (dark only): canvas `#050505`, chrome `#0a0a0a`, cards and termi
 `mods/factory-sidebar/main.js` — nav, workstreams, sessions and footer, one class. Reads `spaces()`, `agents()`, `panes()`, `machines()`, `layout()`, `window()`, `home()`, `shared`/`setShared` (space colours, rail width), `updates()`, `nextCommand()` (the `⌘B` command). Runs `space.select`, `space.new`, `space.move`, `tab.select`, `tab.new`, `tab.close`, `tab.rename`, `layout.select`, `layout.resize`, `layout.show`, `layout.hide`, `app.settings`, `app.palette`, `pane.focus`, and opens the shipped `menu`, `picker`, `new-menu` and `agents` mods.
 
 `mods/factory-home/main.js` — the composer. `TextareaState` with auto-grow, `knownAgents()`, `pickFolder()`, `run("tab.new", { space, folder, argv, task, name })`, `run("layout.select", { stack: "main-stack", child: "work" })`. Its icons are `arrow-up.svg` and `autonomy.svg`.
+
+`mods/factory-agents/main.js` — the agent list popup behind the pill. `knownAgents()`, `setShared("factory.agent")`, and it hands “More to start…” to the shipped `new-menu`.
+
+`mods/factory-machines/main.js` — the machine list popup behind the chip. `machines()`, `setShared("factory.machine")`, and it hands *Add machine…* to the shipped `machine-add` mod.
 
 `mods/factory-status/main.js` — the status line. `layout()` for the panel state, `agents()`, `keys()` for the palette hint.
 
@@ -64,6 +71,7 @@ Shipped mods this layout uses: `pane`, `files`, `changes`, `menu`, `new-menu`, `
 - An SVG spinner (`svg(…).spin(900)`) drew nothing here, so the working mark is a pulsing dot. If the spinner works on your build, swap it in at `factory-sidebar`'s session row.
 - The composer's folder picker runs on this computer only, so it is disabled for a space on another machine.
 - The sidebar never hides, only folds to the rail: `titlebar: "none"` plus a hidden sidebar would leave the window buttons over the work card.
+- The machine and agent choices persist in `shared.json`; *Follow this workstream* in the machine list clears the machine one.
 - Not implemented: dragging sessions between positions (the list is grouped by date, so there is no honest drop index), worktree nesting under its repo, ahead/behind counts, and the machine login guidance. Worktrees appear as their own workstreams, agents live in a dialog rather than a permanent list.
 - Needs Geist, Geist Mono and JetBrains Mono, all of which ship with Herdr.
 
