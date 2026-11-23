@@ -16,9 +16,9 @@
     <rect x="0" y="0" width="146" height="400" fill="#0a0a0a"/>
     <path d="M146 0v400" stroke="#050505" stroke-width="2"/>
     <!-- window controls -->
-    <circle cx="20" cy="18" r="4" fill="#3a342f"/>
-    <circle cx="34" cy="18" r="4" fill="#3a342f"/>
-    <circle cx="48" cy="18" r="4" fill="#3a342f"/>
+    <circle cx="20" cy="15" r="4" fill="#3a342f"/>
+    <circle cx="34" cy="15" r="4" fill="#3a342f"/>
+    <circle cx="48" cy="15" r="4" fill="#3a342f"/>
     <!-- sidebar rows -->
     <rect x="14" y="40" width="118" height="16" rx="5" fill="#202020"/>
     <rect x="22" y="45" width="46" height="6" rx="3" fill="#a49d9a"/>
