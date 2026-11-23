@@ -14,6 +14,6 @@
         "child": "work"
       }
     },
-    "cmd-b": "factory-sidebar.toggle"
+    "cmd-b": "factory-status.toggle-sidebar"
   }
 }

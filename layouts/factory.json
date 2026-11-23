@@ -4,7 +4,7 @@
   "titlebar": "none",
   "traffic_lights": [
     16,
-    18
+    15
   ],
   "theme": "factory",
   "background": "canvas",
@@ -72,7 +72,7 @@
           "id": "sidebar-footer",
           "type": "block",
           "size": {
-            "px": 52
+            "px": 60
           },
           "content": {
             "mod": "factory-sidebar",
@@ -84,7 +84,7 @@
       ]
     },
     {
-      "id": "work",
+      "id": "work-column",
       "type": "column",
       "children": [
         {
@@ -114,7 +114,7 @@
                       },
                       "focus": {
                         "width": 1,
-                        "color": "input"
+                        "color": "accent"
                       },
                       "header": {
                         "content": {
