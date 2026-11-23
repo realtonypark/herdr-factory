@@ -1,0 +1,19 @@
+layouts/factory.svg
+  s_03c58f3c6397ef::t_7a3f6952d5b05d 19-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "acf223c3d49c77670bfb9691a00d7a2c29f85981",
+  "prompts": {},
+  "sessions": {
+    "s_03c58f3c6397ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207f4-67ca-7822-b350-9135a205a448",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "realtonypark <realtonypark@gmail.com>"
+    }
+  }
+}
