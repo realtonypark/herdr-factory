@@ -1,0 +1,41 @@
+themes/factory.json
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 1-49
+RECIPE.md
+  s_4d5bebfb7151a7::t_481b32202369cf 7-10,13,17,19-20,24,29,31,35-43,49,51,55,57,59,63,65,83,87-88
+mods/factory-agents/main.js
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 2,6,38,44-46,52-53,55
+mods/factory-more/mod.json
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 4
+mods/factory-more/main.js
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 17,35,40,55,60-65
+mods/factory-status/main.js
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 64-76,86-92,97-98,100
+mods/factory-home/halftone.py
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 17,35,69,72,99-101
+mods/factory-home/main.js
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 7,26-37,40,42-43,45,56-58,62-67,72-75,77-78,80,85-86,88,96-98,102,105,107-111,114,126-130,132-136,142,148-151,153-154,163-168,174,198,207,210-213,224,227,233,244,246,252,260
+mods/factory-sidebar/main.js
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 11,27,32,34-39,97-107,109,205,212,225,229-236,241-243,264-265,271,274,308,316,336-338,365-366,368-375,381-382,393-394,408-409,412-413,426,446-462,498-501,505-516,526,583,586-591
+mods/factory-machines/main.js
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 17,27,29-31,41,52,56,59-60
+layouts/factory.json
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 75,87,117,202
+tests/factory.test.cjs
+  s_4d5bebfb7151a7::t_00ffc2bf3f706e 1-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7d9da031c51e17447f55ed5140db86a7b1ffb31b",
+  "prompts": {},
+  "sessions": {
+    "s_4d5bebfb7151a7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1fad5-7b25-7013-9857-470a2bf40e44",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "realtonypark <realtonypark@gmail.com>"
+    }
+  }
+}
