@@ -1,0 +1,40 @@
+RECIPE.md
+  s_03c58f3c6397ef::t_01a9400cd69067 17,49
+  s_03c58f3c6397ef::t_223d2fc0f3708d 9,39,55,63
+  s_03c58f3c6397ef::t_672f1fbd36f2ec 76
+tests/factory.test.cjs
+  s_03c58f3c6397ef::t_3a05bdef591b5c 17-18,23,28,76,78-91
+  s_03c58f3c6397ef::t_b339841b42ba03 77,92,112-126,128-139,142-147,149
+  s_03c58f3c6397ef::t_741dc97b2e6855 127,140-141,148
+  s_03c58f3c6397ef::t_e5a1d24d3e9987 93
+mods/factory-home/main.js
+  s_03c58f3c6397ef::t_e0585486d9a923 98-103
+mods/factory-sidebar/main.js
+  s_03c58f3c6397ef::t_01a9400cd69067 11,14,193-195,215,264,543,554
+  s_03c58f3c6397ef::t_672f1fbd36f2ec 109
+layouts/factory.json
+  s_03c58f3c6397ef::t_01a9400cd69067 7
+mods/factory-status/main.js
+  s_03c58f3c6397ef::t_aac67ecaf1823f 7,22
+  s_03c58f3c6397ef::t_223d2fc0f3708d 21,23-37
+mods/factory-more/main.js
+  s_03c58f3c6397ef::t_223d2fc0f3708d 55
+keys.json
+  s_03c58f3c6397ef::t_223d2fc0f3708d 17,19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3b176128ddc1aab392cad96064b25a1f15841d69",
+  "prompts": {},
+  "sessions": {
+    "s_03c58f3c6397ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207f4-67ca-7822-b350-9135a205a448",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "realtonypark <realtonypark@gmail.com>"
+    }
+  }
+}
