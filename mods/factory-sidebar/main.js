@@ -8,7 +8,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { spaces, agents, panes, machines, run, openOverlay, theme, layout, window, home, setAgentOrder, props, shared, setShared, nextCommand, updates } from "herdr";
+import { spaces, agents, panes, machines, run, openOverlay, theme, layout, window, home, props, shared, setShared, nextCommand, updates } from "herdr";
 
 const I = (name) => `mods/workspace-chrome/${name}.svg`;
 
@@ -24,27 +24,20 @@ function find(node, id) {
 // The rail goes by the sidebar's width, so dragging its edge narrows it too.
 const rail = () => (find(layout(), "sidebar")?.size?.px ?? Infinity) < 208;
 const stack = () => find(layout(), "main-stack");
+const startSession = () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 });
 
 function showWork() {
   if (stack()?.active !== "work") run("layout.select", { stack: "main-stack", child: "work" });
 }
-// To the icon rail (wide enough for the window buttons), or back to the
-// width it had. Several copies may hear the same command: the time stamp keeps
-// it to one move.
+// Return to the last expanded width after the icon rail.
 function toggleRail() {
-  const now = Date.now();
-  if (now - (shared("factory.rail.at") ?? 0) < 400) return;
-  setShared("factory.rail.at", now);
-  // Hidden from the palette: bring it back, never leave the window buttons
-  // sitting on the work area.
-  if (find(layout(), "sidebar")?.hidden) {
-    run("layout.show", { id: "sidebar" });
-    return;
+  if (rail()) {
+    const width = shared("factory.rail.width");
+    run("layout.resize", { id: "sidebar", px: typeof width === "number" && width >= 208 ? width : 268 });
+  } else {
+    setShared("factory.rail.width", find(layout(), "sidebar")?.size?.px ?? 268);
+    run("layout.resize", { id: "sidebar", px: window()?.platform === "macos" ? 76 : 44 });
   }
-  const width = find(layout(), "sidebar")?.size?.px ?? 268;
-  const railWidth = window()?.platform === "macos" ? 76 : 44;
-  if (width > railWidth) setShared("factory.rail.width", width);
-  run("layout.resize", { id: "sidebar", px: width > railWidth ? railWidth : (shared("factory.rail.width") ?? 268) });
 }
 
 function showHome() {
@@ -101,15 +94,19 @@ const lastTouch = (space) => Math.max(0, ...(space.tabs ?? []).map((tab) => tab.
 
 export default class FactorySidebar extends View {
   init(_props, cx) {
-    this.folded = new Set(JSON.parse(localStorage.getItem("factory.folded") ?? '["week","month","older","settled"]'));
-    this.mine = localStorage.getItem("factory.mine") === "1";
-    this.pressed = null;
-    this.over = null;
-    this.hovered = null;
-    // Relative times age, so repaint slowly while the window is up.
-    cx.timer.every(30000, (cx) => cx.notify());
+    const part = props()?.part ?? "list";
+    if (part === "list") {
+      let folded;
+      try { folded = JSON.parse(localStorage.getItem("factory.folded")); } catch {}
+      this.folded = new Set(Array.isArray(folded) ? folded : ["week", "month", "older", "settled"]);
+      this.mine = localStorage.getItem("factory.mine") === "1";
+      this.pressed = null;
+      this.over = null;
+      this.hovered = null;
+      cx.timer.every(60000, (cx) => { if (!rail()) cx.notify(); });
+    }
     // cmd-b reaches the head copy and collapses the sidebar to its rail.
-    if (props()?.part === "head") {
+    if (part === "head") {
       cx.spawn(async (cx) => {
         for (;;) {
           try {
@@ -205,16 +202,15 @@ export default class FactorySidebar extends View {
       .cursor_pointer()
       .hover((s) => s.bg(t.hover).text_color(t.foreground))
       .tooltip(tip)
+      .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
       .on_click(action)
       .child(svg(name).size(15));
-    const atHome = stack()?.active === "home";
     return h_flex()
       .size_full()
       .items_center()
       .gap(4)
-      .pl(lights && !compact ? 76 : compact ? 0 : 12)
+      .pl(lights ? 82 : 12)
       .pr(10)
-      .when(lights && compact, (el) => el.pt(24).justify_center())
       .child(div()
         .id("factory-sidebar-toggle")
         .size(26)
@@ -226,23 +222,27 @@ export default class FactorySidebar extends View {
         .cursor_pointer()
         .text_color(t.muted)
         .hover((s) => s.bg(t.hover).text_color(t.foreground))
-        .tooltip(rail() ? "Show the sidebar" : "Collapse the sidebar")
+        .tooltip("Collapse the sidebar")
         .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
         .on_click(toggleRail)
         .child(svg(I("sidebar")).size(16)))
-      .when(!compact, (el) => el.child(div().flex_1()))
-      .when(!compact, (el) => el
-        .child(icon("factory-prev", I("chevron-left"), () => run("space.prev"), "Previous space"))
-        .child(icon("factory-next", I("chevron-right"), () => run("space.next"), "Next space")));
+      .child(div().flex_1())
+      .child(icon("factory-prev", I("chevron-left"), () => run("space.prev"), "Previous workstream"))
+      .child(icon("factory-next", I("chevron-right"), () => run("space.next"), "Next workstream"))
+      .when(Boolean(w?.buttons), (el) => el
+        .child(icon("factory-minimize", "mods/tabs/win-min.svg", () => run("window.minimize"), "Minimize"))
+        .child(icon("factory-maximize", w.maximized ? "mods/tabs/win-restore.svg" : "mods/tabs/win-max.svg",
+          () => run("window.maximize"), w.maximized ? "Restore" : "Maximize"))
+        .child(icon("factory-close-window", "mods/tabs/win-close.svg", () => run("window.close"), "Close window")));
   }
 
   navPart(t, compact) {
     const atHome = stack()?.active === "home";
-    const needing = agents().filter((a) => a.status === "blocked" || a.status === "done");
-    const working = agents().filter((a) => a.status === "working").length;
+    const list = agents();
+    const needing = list.filter((a) => a.status === "blocked" || a.status === "done").length;
+    const working = list.filter((a) => a.status === "working").length;
     const search = () => run("mod.open", { name: "picker" });
     const more = () => run("mod.open", { name: "factory-more" });
-    const session = () => { run("tab.new"); showWork(); };
     if (compact) {
       const cell = (id, name, action, tip, tone) => div()
         .id(id)
@@ -261,17 +261,17 @@ export default class FactorySidebar extends View {
         .child(svg(name).size(15));
       return v_flex().size_full().items_center().pt(2).gap(2)
         .child(cell("factory-home", this.m("house"), showHome, "Home", atHome ? t.foreground : undefined))
-        .child(cell("factory-new", I("plus"), session, "New session"))
-        .child(cell("factory-agents", I("circle-check"), () => openOverlay({ mod: "agents", kind: "dialog", width: 420, height: 560 }), needing.length ? `${needing.length} needs you` : "Agents", needing.length ? t.accent : working ? t.working : undefined))
+        .child(cell("factory-new", I("plus"), startSession, "New session"))
+        .child(cell("factory-agents", I("circle-check"), () => openOverlay({ mod: "agents", kind: "dialog", width: 420, height: 560 }), needing ? `${needing} need attention` : "Agents", needing ? t.accent : working ? t.working : undefined))
         .child(cell("factory-search", I("search"), search, "Search"))
         .child(cell("factory-more", I("layers"), more, "More"));
     }
     return v_flex().size_full().pt(2).gap(1)
       .child(this.nav(t, "factory-home", this.m("house"), "Home", showHome, null, atHome))
-      .child(this.nav(t, "factory-new", I("plus"), "New session", session))
+      .child(this.nav(t, "factory-new", I("plus"), "New session", startSession))
       .child(this.nav(t, "factory-agents", I("circle-check"), working ? `Agents · ${working} working` : "Agents",
         () => openOverlay({ mod: "agents", kind: "dialog", width: 420, height: 560 }),
-        this.badge(t, needing.length, true)))
+        this.badge(t, needing, true)))
       .child(this.nav(t, "factory-search", I("search"), "Search", search))
       .child(this.nav(t, "factory-more", I("layers"), "More", more));
   }
@@ -305,16 +305,15 @@ export default class FactorySidebar extends View {
       .justify_center()
       .text_size(10.5)
       .font_bold()
-      .text_color("#ffffff")
+      .text_color(t.solid_foreground)
       .bg(t[name] ?? t.dim)
       .child([...space.name][0]?.toUpperCase() ?? "?");
   }
 
   workstreams(t, compact) {
     const list = spaces();
-    const colors = this.colors();
     if (compact) {
-      return v_flex().size_full().items_center().gap(3).pt(6)
+      return v_flex().w_full().items_center().gap(3).pt(6)
         .children(list.map((s) => div()
           .id(`ws-${s.id}`)
           .relative()
@@ -334,6 +333,9 @@ export default class FactorySidebar extends View {
           .child([...s.name][0]?.toUpperCase() ?? "?")
           .when(Boolean(s.status), (s2) => s2.child(div().absolute().right(4).bottom(4).size(5).rounded_full().bg(t[s.status] ?? t.dim)))));
     }
+    const colors = this.colors();
+    const pressedIndex = list.findIndex((space) => space.id === this.pressed);
+    const unavailable = new Set(machines().filter((machine) => machine.layout === "unavailable").map((machine) => machine.name));
     return v_flex()
       .child(this.section(t, "Workstreams", "workstreams", null,
         div().id("ws-new").size(20).flex_none().flex().items_center().justify_center().rounded(5)
@@ -360,18 +362,24 @@ export default class FactorySidebar extends View {
           .when(this.pressed === space.id && this.over !== space.id, (el) => el.opacity(0.5))
           .when(this.pressed !== null && this.over === space.id && this.pressed !== space.id, (el) => el.child(
             div().absolute().left(0).right(0).h(2).bg(t.accent)
-              .when(spaces().findIndex((s) => s.id === this.pressed) < i, (line) => line.bottom(0))
-              .when(spaces().findIndex((s) => s.id === this.pressed) > i, (line) => line.top(0))))
+              .when(pressedIndex < i, (line) => line.bottom(0))
+              .when(pressedIndex > i, (line) => line.top(0))))
           .on_mouse_down("left", () => { this.pressed = space.id; this.over = space.id; })
-          .on_mouse_move(() => { if (this.pressed !== null && this.over !== space.id) { this.over = space.id; } })
+          .on_mouse_move((_e, cx) => {
+            if (this.pressed === null) return;
+            const source = list.find((item) => item.id === this.pressed);
+            const over = source?.machine === space.machine ? space.id : null;
+            if (this.over === over) return;
+            this.over = over;
+            cx.notify();
+          })
           .on_mouse_up("left", (_e, cx) => {
             const from = this.pressed;
             const to = this.over;
             this.pressed = null;
             this.over = null;
-            if (from && to && from !== to) {
-              const index = spaces().findIndex((s) => s.id === space.id);
-              if (index !== -1) run("space.move", { id: from, index: index + 1 });
+            if (from && to === space.id && from !== to && list.find((item) => item.id === from)?.machine === space.machine) {
+              run("space.move", { id: from, index: i + 1 });
             } else if (from === space.id) {
               run("space.select", { id: space.id });
               showWork();
@@ -382,8 +390,8 @@ export default class FactorySidebar extends View {
           .child(this.mark(t, space, colors))
           .child(div().flex_1().min_w(0).truncate().child(space.name))
           .when(Boolean(space.machine), (el) => el.child(h_flex().flex_none().gap(4).items_center()
-            .child(div().font_family("Geist Mono").text_size(10).text_color(t.dim).child(space.machine))
-            .when(machines().some((m) => m.name === space.machine && m.layout === "unavailable"),
+            .child(div().font_family("Geist Mono").text_size(10).text_color(t.dim).max_w(64).truncate().child(space.machine))
+            .when(unavailable.has(space.machine),
               (off) => off.tooltip(`${space.machine} is not answering`).child(div().size(5).rounded_full().bg(t.blocked)))))
           .when(Boolean(branch), (el) => el.child(h_flex().flex_none().gap(3).items_center()
             .child(svg(I("branch")).size(10).flex_none().text_color(t.dim))
@@ -397,12 +405,12 @@ export default class FactorySidebar extends View {
 
   sessions(t, compact) {
     if (compact) return div();
-    const active = spaces().find((s) => s.active);
+    const workstreams = spaces();
+    const active = workstreams.find((s) => s.active);
     const lead = new Map();
     for (const pane of panes()) if (pane.terminal && !lead.has(pane.tab)) lead.set(pane.tab, pane);
-    const all = spaces().flatMap((space) => (space.tabs ?? []).map((tab) => ({ space, tab })));
-    const list = (this.mine && active ? all.filter((x) => x.space.id === active.id) : all)
-      .filter((x) => !x.tab.settled || x.tab.status === "blocked" || x.tab.status === "done")
+    const list = (this.mine && active ? [active] : workstreams)
+      .flatMap((space) => (space.tabs ?? []).map((tab) => ({ space, tab })))
       .sort((a, b) => (b.tab.changed_at ?? 0) - (a.tab.changed_at ?? 0));
     const newSession = div()
       .id("sessions-new")
@@ -415,7 +423,7 @@ export default class FactorySidebar extends View {
       .text_color(t.dim)
       .hover((s) => s.bg(t.hover).text_color(t.foreground))
       .tooltip("New session: a terminal or an agent")
-      .on_click((_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 }); })
+      .on_click((_e, cx) => { cx.stop_propagation(); startSession(); })
       .child(svg(I("plus")).size(13));
     const filter = div()
       .id("sessions-filter")
@@ -435,7 +443,23 @@ export default class FactorySidebar extends View {
         cx.notify();
       })
       .child(svg(this.m("filter")).size(13));
-    const rows = [];
+    const rows = [this.section(t, "Sessions", "sessions", null,
+      h_flex().flex_none().gap(2).items_center().child(filter).child(newSession))];
+
+    const action = (tab, command, icon, label) => div()
+      .id(`session-${command}-${tab.id}`)
+      .size(16)
+      .flex_none()
+      .flex()
+      .items_center()
+      .justify_center()
+      .rounded(4)
+      .text_color(t.dim)
+      .hover((s) => s.bg(t.raised).text_color(t.foreground))
+      .tooltip(label)
+      .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+      .on_click((_e, cx) => { cx.stop_propagation(); run(command, { id: tab.id }); })
+      .child(svg(icon).size(10));
 
     const line = ({ space, tab }, settled) => {
       const on = tab.active && space.active;
@@ -471,31 +495,26 @@ export default class FactorySidebar extends View {
             : div().size(5).rounded_full().bg(tab.status ? t[tab.status] ?? t.dim : on ? t.muted : t.input)))
         .child(div().flex_1().min_w(0).truncate().child(name))
         .when(tab.zoomed, (el) => el.child(div().flex_none().font_family("Geist Mono").text_size(10).text_color(t.dim).child("Z")))
-        .when(hovered, (el) => el.child(div()
-          .id(`session-close-${tab.id}`)
-          .size(16)
-          .flex_none()
-          .flex()
-          .items_center()
-          .justify_center()
-          .rounded(4)
-          .text_color(t.dim)
-          .hover((s) => s.bg(t.raised).text_color(t.foreground))
-          .tooltip("Close this session")
-          .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
-          .on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: tab.id }); })
-          .child(svg("mods/pane/close.svg").size(10))))
+        .when(hovered, (el) => el
+          .child(action(tab, tab.settled ? "tab.unsettle" : "tab.settle", I(tab.settled ? "chevron-left" : "archive"),
+            tab.settled ? "Restore this session" : "Settle this session"))
+          .child(action(tab, "tab.close", "mods/pane/close.svg", "Close this session")))
         .when(!hovered, (el) => el.child(div().flex_none().font_family("Geist Mono").text_size(10.5).text_color(t.dim).child(ago(tab.changed_at))));
     };
 
-    const groups = BUCKETS.map((b) => ({ ...b, rows: list.filter((x) => !x.tab.settled && bucketOf(x.tab.changed_at) === b.id) }))
-      .filter((g) => g.rows.length);
-    for (const [i, group] of groups.entries()) {
-      rows.push(this.section(t, group.label, group.id, (cx) => this.fold(group.id, cx),
-        i === 0 ? h_flex().flex_none().gap(2).items_center().child(filter).child(newSession) : null));
-      if (!this.folded.has(group.id)) for (const x of group.rows) rows.push(line(x, false));
+    const groups = new Map(BUCKETS.map((bucket) => [bucket.id, []]));
+    const away = [];
+    for (const session of list) {
+      const { tab, space } = session;
+      const settled = tab.settled && !(tab.active && space.active) && tab.status !== "blocked" && tab.status !== "done";
+      (settled ? away : groups.get(bucketOf(tab.changed_at))).push(session);
     }
-    const away = list.filter((x) => x.tab.settled);
+    for (const group of BUCKETS) {
+      const sessions = groups.get(group.id);
+      if (!sessions.length) continue;
+      rows.push(this.section(t, group.label, group.id, (cx) => this.fold(group.id, cx), null));
+      if (!this.folded.has(group.id)) for (const session of sessions) rows.push(line(session, false));
+    }
     if (away.length) {
       rows.push(this.section(t, `Settled · ${away.length}`, "settled", (cx) => this.fold("settled", cx), null));
       if (!this.folded.has("settled")) for (const x of away) rows.push(line(x, true));
@@ -504,7 +523,7 @@ export default class FactorySidebar extends View {
   }
 
   foot(t, compact) {
-    const name = home().split("/").filter(Boolean).pop() ?? "you";
+    const name = home().split(/[\\/]/).filter(Boolean).pop() ?? "you";
     const needing = agents().filter((a) => a.status === "blocked" || a.status === "done").length;
     const gear = div()
       .id("factory-settings")
@@ -554,8 +573,6 @@ export default class FactorySidebar extends View {
     if (part === "head") return v_flex().size_full().bg(t.chrome).child(this.head(t, compact));
     if (part === "nav") return v_flex().size_full().bg(t.chrome).px(compact ? 0 : 8).child(this.navPart(t, compact));
     if (part === "foot") return v_flex().size_full().bg(t.chrome).child(this.foot(t, compact));
-    const chain = agents().slice().sort((a, b) => b.seq - a.seq).map((a) => a.address);
-    if (chain.length) setAgentOrder(chain);
     return v_flex()
       .size_full()
       .min_h(0)
@@ -563,8 +580,15 @@ export default class FactorySidebar extends View {
       .px(compact ? 0 : 8)
       .pb(8)
       .child(v_flex()
+        .id("factory-sidebar-scroll")
         .flex_1()
         .min_h(0)
+        .on_mouse_up("left", (_e, cx) => {
+          if (this.pressed === null) return;
+          this.pressed = null;
+          this.over = null;
+          cx.notify();
+        })
         .overflow_y_scrollbar()
         .children([
           this.workstreams(t, compact),

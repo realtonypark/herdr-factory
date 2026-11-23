@@ -61,11 +61,19 @@ export default class FactoryStatus extends View {
     const list = agents();
     const needs = list.filter((a) => a.status === "blocked" || a.status === "done").length;
     const working = list.filter((a) => a.status === "working").length;
-    const item = (icon, text) => h_flex().flex_none().gap(6).items_center()
-      .child(svg(icon).size(12).flex_none().text_color(t.dim))
-      .child(div().child(text));
-    const panel = find(layout(), "panel");
-    const body = find(layout(), "panel-body");
+    const root = layout();
+    const atHome = find(root, "main-stack")?.active === "home";
+    const tab = space?.tabs.find((item) => item.active)?.id;
+    // This bar stays visible while Home is hidden, so it also sees native tab changes.
+    if (atHome && this.atHome && tab && tab !== this.tab) {
+      run("layout.select", { stack: "main-stack", child: "work" });
+    } else if (atHome && !this.atHome) {
+      run("factory-home.focus");
+    }
+    this.atHome = atHome;
+    this.tab = tab;
+    const panel = find(root, "panel");
+    const body = find(root, "panel-body");
     const open = Boolean(panel && !panel.hidden);
     return h_flex()
       .size_full()
@@ -75,21 +83,21 @@ export default class FactoryStatus extends View {
       .bg(t.canvas)
       .text_size(11.5)
       .text_color(t.dim)
-      .child(h_flex().flex_none().gap(6).items_center().font_family("Geist Mono").text_size(10.5)
-        .child(svg(space?.machine ? I("server") : I("monitor")).size(12).flex_none().text_color(t.dim))
-        .child(div().child(space?.machine ?? "this computer")))
-      .when(Boolean(space?.branch), (el) => el.child(h_flex().flex_none().gap(6).items_center().font_family("Geist Mono").text_size(10.5)
-        .child(svg(I("branch")).size(12).flex_none().text_color(t.dim))
-        .child(div().child(space.branch))))
+      .child(h_flex().flex_1().min_w(0).gap(12).items_center().font_family("Geist Mono").text_size(10.5)
+        .child(h_flex().id("status-machine").min_w(0).gap(6).items_center().tooltip(space?.machine ?? "This computer")
+          .child(svg(space?.machine ? I("server") : I("monitor")).size(12).flex_none().text_color(t.dim))
+          .child(div().min_w(0).truncate().child(space?.machine ?? "This computer")))
+        .when(Boolean(space?.branch), (el) => el.child(h_flex().id("status-branch").min_w(0).gap(6).items_center().tooltip(space.branch)
+          .child(svg(I("branch")).size(12).flex_none().text_color(t.dim))
+          .child(div().min_w(0).truncate().child(space.branch)))))
       .child(h_flex().id("status-agents").flex_none().gap(6).items_center().cursor_pointer()
         .hover((s) => s.text_color(t.muted))
         .tooltip("Agents, with their state and pins")
         .on_click(() => openOverlay({ mod: "agents", kind: "dialog", width: 420, height: 560 }))
-        .child(div().size(5).rounded_full().bg(working ? t.working : needs ? t.accent : t.input)
-          .when(working > 0, (el) => el.loop("opacity", { from: 0.35, to: 1, period: 1300 })))
+        .child(div().size(5).rounded_full().bg(needs ? t.accent : working ? t.working : t.input)
+          .when(!needs && working > 0, (el) => el.loop("opacity", { from: 0.35, to: 1, period: 1300 })))
         .child(div().font_family("Geist Mono").text_size(10.5).child(`${list.length} ${list.length === 1 ? "agent" : "agents"}`))
-        .when(needs > 0, (el) => el.child(div().text_color(t.accent).child(`· ${needs} needs you`))))
-      .child(div().flex_1())
+        .when(needs > 0, (el) => el.child(div().text_color(t.accent).child(`· ${needs} need attention`))))
       .child(h_flex().flex_none().h(20).rounded(6).border_1().border_color(t.border).overflow_hidden()
         .child(this.panel(t, "files", "Files", "mods/files/file.svg", open, body?.active === "files"))
         .child(this.panel(t, "changes", "Changes", "mods/workspace-chrome/git-compare.svg", open, body?.active === "changes")))

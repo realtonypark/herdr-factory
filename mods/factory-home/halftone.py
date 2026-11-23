@@ -14,6 +14,7 @@ is 6 px at zoom 1 and stays crisp at 2x).
 """
 
 import math
+from pathlib import Path
 
 from PIL import Image, ImageDraw
 
@@ -31,6 +32,7 @@ RAMP = [
     (0.97, "#ff8a38"),
     (1.00, "#ffc07f"),
 ]
+STOPS = [(light, tuple(bytes.fromhex(color[1:]))) for light, color in RAMP]
 
 # Dot radius, as a fraction of the pitch, at no light and at full light.
 SMALL, LARGE = 0.10, 0.44
@@ -64,11 +66,10 @@ def mix(a, b, t):
 
 def colour_of(value):
     """The ramp's colour at a light value, interpolated in RGB."""
-    stops = [(light, tuple(int(h[i : i + 2], 16) for i in (1, 3, 5))) for light, h in RAMP]
-    for (low, a), (high, b) in zip(stops, stops[1:]):
+    for (low, a), (high, b) in zip(STOPS, STOPS[1:]):
         if value <= high:
             return mix(a, b, 0 if high == low else (value - low) / (high - low))
-    return stops[-1][1]
+    return STOPS[-1][1]
 
 
 def grain(cx, cy):
@@ -95,8 +96,9 @@ def main():
                 (x - radius, y - radius, x + radius, y + radius),
                 fill=colour,
             )
-    image.save("halftone.png")
-    print("wrote halftone.png", image.size)
+    output = Path(__file__).with_name("halftone.png")
+    image.save(output)
+    print(f"wrote {output}", image.size)
 
 
 if __name__ == "__main__":

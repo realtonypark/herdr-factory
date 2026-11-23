@@ -14,7 +14,7 @@ export default class FactoryMachines extends View {
     closeOverlay(props()?.overlay);
   }
 
-  row(t, id, label, note, value, current) {
+  row(t, id, label, note, value, current, enabled = true) {
     return h_flex()
       .id(id)
       .h(30)
@@ -24,11 +24,11 @@ export default class FactoryMachines extends View {
       .items_center()
       .rounded(6)
       .text_size(12.5)
-      .text_color(current ? t.foreground : t.muted)
+      .text_color(enabled ? (current ? t.foreground : t.muted) : t.dim)
       .when(current, (el) => el.bg(t.selected))
-      .cursor_pointer()
-      .hover((s) => s.bg(t.hover).text_color(t.foreground))
-      .on_click(() => this.choose(value))
+      .when(enabled, (el) => el.cursor_pointer()
+        .hover((s) => s.bg(t.hover).text_color(t.foreground))
+        .on_click(() => this.choose(value)))
       .child(svg(I(value ? "server" : "monitor")).size(13).flex_none().text_color(t.dim))
       .child(div().flex_1().min_w(0).truncate().child(label))
       .when(Boolean(note), (el) => el.child(div().flex_none().font_family("Geist Mono").text_size(10).text_color(t.dim).child(note)))
@@ -38,7 +38,7 @@ export default class FactoryMachines extends View {
   render() {
     const t = theme();
     const chosen = shared("factory.machine");
-    const list = machines();
+    const list = machines().filter((machine) => machine.name);
     return v_flex()
       .size_full()
       .p(6)
@@ -49,14 +49,15 @@ export default class FactoryMachines extends View {
       .child(div().px(8).pt(3).pb(6).child("START SESSIONS ON"))
       .child(this.row(t, "machines-follow", "Follow this workstream", null, null, chosen === null || chosen === undefined))
       .child(this.row(t, "machines-local", "This computer", null, "", chosen === ""))
-      .children(list.filter((m) => m.name).map((m) => this.row(
+      .child(v_flex().id("factory-machine-list").h(Math.min(120, list.length * 30)).overflow_y_scrollbar().children(list.map((m) => this.row(
         t,
         `machines-${m.name}`,
         m.name,
-        m.layout === "ready" ? null : m.layout === "loading" ? "…" : "asleep",
+        m.layout === "ready" ? null : m.layout === "loading" ? "Loading…" : "Unavailable",
         m.name,
         chosen === m.name,
-      )))
+        m.layout === "ready",
+      ))))
       .child(div().h(1).my(5).mx(4).flex_none().bg(t.border))
       .child(h_flex()
         .id("machines-add")
