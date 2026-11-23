@@ -52,7 +52,7 @@ export default class FactoryMore extends View {
       .child(this.item(t, "more-changes", "mods/workspace-chrome/git-compare.svg", "Changes", () => show("changes")))
       .when(Boolean(panel && !panel.hidden), (el) => el.child(this.item(t, "more-close-panel", "mods/pane/close.svg", "Close the panel", () => run("layout.hide", { id: "panel" }))))
       .child(divider())
-      .child(this.item(t, "more-sidebar", "mods/workspace-chrome/sidebar.svg", "Toggle sidebar", () => run("factory-sidebar.toggle")))
+      .child(this.item(t, "more-sidebar", "mods/workspace-chrome/sidebar.svg", "Toggle sidebar", () => run("factory-status.toggle-sidebar")))
       .child(this.item(t, "more-settings", "mods/workspace-chrome/settings.svg", "Settings", () => run("app.settings")))
       .child(this.item(t, "more-help", null, "Shortcuts", () => run("app.help")))
       .child(this.item(t, "more-notes", null, "What's new", () => run("app.whats_new")))

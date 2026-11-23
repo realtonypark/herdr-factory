@@ -4,7 +4,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { spaces, agents, theme, run, window, keys, layout, openOverlay } from "herdr";
+import { checking, spaces, agents, theme, run, window, keys, layout, openOverlay, nextCommand } from "herdr";
 
 const I = (name) => `mods/workspace-chrome/${name}.svg`;
 
@@ -18,6 +18,23 @@ function find(node, id) {
 }
 
 export default class FactoryStatus extends View {
+  init(_props, cx) {
+    if (checking()) return;
+    // Herdr delivers commands only to visible mods, so listen outside the sidebar.
+    cx.spawn(async () => {
+      for (;;) {
+        const command = await nextCommand().catch(() => null);
+        if (command === null) return;
+        if (command !== "toggle-sidebar") continue;
+        if (find(layout(), "sidebar")?.hidden) {
+          run("layout.show", { id: "sidebar" });
+        } else {
+          run("factory-sidebar.toggle");
+        }
+      }
+    });
+  }
+
   // The palette key as actually bound, not a hardcoded one.
   hint() {
     const mac = window()?.platform === "macos";

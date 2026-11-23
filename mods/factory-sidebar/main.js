@@ -8,9 +8,10 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { spaces, agents, panes, machines, run, openOverlay, theme, layout, window, home, props, shared, setShared, nextCommand, updates } from "herdr";
+import { spaces, agents, panes, machines, run, openOverlay, theme, layout, window, home, props, shared, setShared, nextCommand, updates, settings } from "herdr";
 
 const I = (name) => `mods/workspace-chrome/${name}.svg`;
+const RAIL_ICON_SIZE = 18;
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -105,7 +106,7 @@ export default class FactorySidebar extends View {
       this.hovered = null;
       cx.timer.every(60000, (cx) => { if (!rail()) cx.notify(); });
     }
-    // cmd-b reaches the head copy and collapses the sidebar to its rail.
+    // The status bar forwards toggle requests to the head while it is visible.
     if (part === "head") {
       cx.spawn(async (cx) => {
         for (;;) {
@@ -187,9 +188,11 @@ export default class FactorySidebar extends View {
 
   head(t, compact) {
     const w = window();
-    const lights = w?.platform === "macos" && !w?.fullscreen;
     // On the rail the window buttons own the top row: leave it to them.
     if (compact) return v_flex().size_full().bg(t.chrome);
+    const lights = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen;
+    // Native window buttons stay the same size when Herdr zoom changes.
+    const left = lights ? ((layout()?.traffic_lights?.[0] ?? 12) + 64) / settings().zoom : 12;
     const icon = (id, name, action, tip) => div()
       .id(id)
       .size(26)
@@ -209,7 +212,7 @@ export default class FactorySidebar extends View {
       .size_full()
       .items_center()
       .gap(4)
-      .pl(lights ? 82 : 12)
+      .pl(left)
       .pr(10)
       .child(div()
         .id("factory-sidebar-toggle")
@@ -258,7 +261,7 @@ export default class FactorySidebar extends View {
         .hover((s) => s.bg(t.hover).text_color(t.foreground))
         .tooltip(tip)
         .on_click(action)
-        .child(svg(name).size(15));
+        .child(svg(name).size(RAIL_ICON_SIZE));
       return v_flex().size_full().items_center().pt(2).gap(2)
         .child(cell("factory-home", this.m("house"), showHome, "Home", atHome ? t.foreground : undefined))
         .child(cell("factory-new", I("plus"), startSession, "New session"))
@@ -537,7 +540,7 @@ export default class FactorySidebar extends View {
       .hover((s) => s.bg(t.hover).text_color(t.foreground))
       .tooltip("Settings")
       .on_click(() => run("app.settings"))
-      .child(svg(I("settings")).size(15))
+      .child(svg(I("settings")).size(compact ? RAIL_ICON_SIZE : 15))
       .when(Boolean(updates()?.app?.ready), (el) => el.relative().child(div().absolute().top(3).right(3).size(5).rounded_full().bg(t.accent)));
     if (compact) {
       const unfold = div()
@@ -548,7 +551,7 @@ export default class FactorySidebar extends View {
         .items_center()
         .justify_center()
         .rounded(6)
-        .text_size(14)
+        .text_size(RAIL_ICON_SIZE)
         .text_color(t.dim)
         .hover((s) => s.bg(t.hover).text_color(t.foreground))
         .tooltip("Show the sidebar")

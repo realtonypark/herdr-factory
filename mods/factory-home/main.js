@@ -95,7 +95,12 @@ export default class FactoryHome extends View {
 
   pick(cx) {
     cx.spawn(async (cx) => {
-      const folder = await pickFolder({ prompt: "Choose session folder" });
+      let folder;
+      try {
+        folder = await pickFolder({ prompt: "Choose session folder" });
+      } catch {
+        return;
+      }
       if (!folder) return;
       this.folder = folder;
       cx.notify();
